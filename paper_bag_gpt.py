@@ -1,3 +1,4 @@
+import random
 import openai
 import datetime
 import time
@@ -148,14 +149,20 @@ def text2speech(openai_text):
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
     
     speech_synthesizer.synthesis_started.connect(lambda evt: print("Synthesis started: {}".format(evt)))
-
+    curr_pos = 0
     def synthesizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
-        print(len(evt.result.audio_data), evt.result.audio_data[len(evt.result.audio_data)-30:len(evt.result.audio_data)-1])
-        print(int(evt.result.audio_data[len(evt.result.audio_data)*3//4]/255*90))
-        pwm_pos(0, 1, int(evt.result.audio_data[len(evt.result.audio_data)-1]/255*90))
+        print("At word boundary")
+        #print(len(evt.result.audio_data), evt.result.audio_data[len(evt.result.audio_data)-30:len(evt.result.audio_data)-1])
+        #print(int(evt.result.audio_data[len(evt.result.audio_data)]/255*90))
+        nonlocal curr_pos
+        pwm_pos(0, 1, curr_pos*70 + 10)
+        if (not curr_pos):
+            curr_pos = 1
+        else:
+            curr_pos = 0
         #print(evt.result.audio_data[len(evt.result.audio_data)-1])
-
-    speech_synthesizer.synthesizing.connect(synthesizing_cb)
+    speech_synthesizer.synthesis_word_boundary.connect(synthesizing_cb)
+   #speech_synthesizer.synthesizing.connect(synthesizing_cb)
     speech_synthesizer.synthesis_completed.connect(lambda evt: print("Synthesis completed: {}".format(evt)))
 
 
