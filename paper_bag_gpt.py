@@ -11,11 +11,16 @@ import settings
 button_pin = 91
 chip_num = 1
 
-
-import sys
 from periphery import PWM
 import subprocess
-import time
+import numpy
+import threading
+
+
+#CHANGE THESE ONCE WORKING
+viseme_event_now = False
+viseme_num = 0
+kill_viseme = False
 
 #need to run this with root privilege because of ldto enable/disable
 def activate_pwm(pwm_name, pwm_chip_num):
@@ -42,15 +47,27 @@ def deactivate_pwm(pwm_name):
         subprocess.getoutput(f'sudo ldto disable {pwm_name}')
     else:
         print(f"PWM name: {pwm_name} already not active")
+class pwm_runner:
+    def __init__(self, chip_num, pwm_num, period_ns=2400000, duty_cycle_ns=400000, step_ns=100000):
+        self.chip_num = chip_num
+        self.pwm_num = pwm_num
+        self.period_ns = period_ns
+        self.duty_cycle_ns = duty_cycle_ns
+        self.step_ns = step_ns
+        self.__pwm_obj = PWM(0, 1)
+        self.__pwm_obj.period_ns = period_ns
+        self.__pwm_obj.duty_cycle_ns = period_ns
+        self.__pwm_obj.enable()
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__pwm_obj.close()
 
-def pwm_pos(chip_num, pwm_num, angle, period_ns=2400000, duty_cycle_ns=400000, step_ns=100000):
-    pwm_here = PWM(0, 1)
-    pwm_here.period_ns = period_ns
-    pwm_here.duty_cycle_ns = duty_cycle_ns
-    pwm_here.enable()
-    pwm_here.duty_cycle_ns = int(duty_cycle_ns + (period_ns - duty_cycle_ns)* (int(angle)/180))
-    time.sleep(0.1)
-    pwm_here.close()
+    def set_pos(self, angle):
+        self.__pwm_obj.duty_cycle_ns = int(self.duty_cycle_ns + (self.period_ns - self.duty_cycle_ns)* (int(angle)/180))
+
+    def close(self):
+        self.__pwm_obj.close()
 
 def push_button_record():
     curr_text_index = 0
@@ -135,43 +152,106 @@ def gen_assistant_content(curr_convo, assistant_response):
 def gen_user_response(curr_convo, user_response):
     curr_convo.append({ "role" : "user", "content" : user_response })
 
-def text2speech(openai_text):
-    #out_stream = speechsdk.audio.PullAudioOutputStream()
+def visemes2servo(*pwm_run):
+    low = 10
+    high = 70
+    secs_per_deg = (0.1/60)
+    last_setting = False
+    global kill_viseme
+    global viseme_event_now
+    global viseme_num
+    print("THESE ARE START VALUES:", kill_viseme, viseme_event_now)
+    open_mouths = [1, 2, 9, 11, 20]
+    closed_mouths = [0, 18, 21 ]
+    oooo_mouths = [3, 7, 10, 13]
+    mid_mouths = [4, 5, 8, 12, 14, 17, 19 ]
+    mid_low_mouths = [6, 15, 16 ]
+    last_angle = 0
+    curr_angle = 0
+    while not kill_viseme:
+        if viseme_event_now: 
+            print("We're in a viseme event...")
+            if viseme_num in open_mouths:
+                pwm_run[0].set_pos(high)
+                curr_angle = high
+            elif viseme_num in oooo_mouths or viseme_num in mid_mouths:
+                pwm_run[0].set_pos(low + (high-low)//2)
+                curr_angle = low + (high-low)//2
+            elif viseme_num in mid_low_mouths: 
+                pwm_run[0].set_pos(low + (high-low)//4)
+                curr_angle = low + (high-low)//4
+            else: 
+                pwm_run[0].set_pos(low)
+                curr_angle = low 
+            time.sleep(int(abs(curr_angle-last_angle)*secs_per_deg))
+            last_angle = curr_angle
+            viseme_event_now = False
+    return last_setting
 
-    audio_config = speechsdk.audio.AudioOutputConfig(device_name=settings.speaker_device_name)
+
+
+def text2speech(pwm_obj, openai_text):
+    #out_stream = speechsdk.audio.PullAudioOutputStream()
+    last_time = time.time()
+    last_setting = False
+    def phenome_rec_audio_event(evt: speechsdk.SpeechSynthesisVisemeEventArgs):
+        global viseme_event_now
+        global viseme_num
+        #nonlocal last_time
+        print("Phenome rec")
+        print(evt)
+        viseme_event_now = True
+        viseme_num = evt.viseme_id
+       #print("visemes2servo starting...")
+        #visemes2servo(evt.viseme_id, last_setting)
+       #if ((time.time() - last_time) > 0):
+       #    if last_setting:
+       #        pwm_obj.set_pos(10)
+       #       #time.sleep(0.2)
+       #    else:
+       #        pwm_obj.set_pos(70)
+       #       #time.sleep(0.2)
+       #last_setting = not last_setting
+       #print(last_setting)
+    def chunk_rec_audio_event(evt: speechsdk.SpeechRecognitionEventArgs):
+        print("Chunk rec")
+        print(evt)
+    audio_complete = False
+    def complete_audio_event(evt: speechsdk.SpeechRecognitionEventArgs):
+        nonlocal audio_complete
+        audio_complete = True
+        print("Synthesis completed: {}".format(evt))
     speech_config = speechsdk.SpeechConfig(subscription=settings.azure_sub, region=settings.azure_region)
 
     # Set the voice name, refer to https://aka.ms/speech/voices/neural for full list.
     speech_config.speech_synthesis_voice_name = "en-US-AriaNeural"
-    #print(speech_config.getProperty("style"))
     # https://learn.microsoft.com/en-us/javascript/api/microsoft-cognitiveservices-speech-sdk/?view=azure-node-latest
-    # Creates a speech synthesizer using the default speaker as audio output.
-    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+    # Creates a speech synthesizer using the default speaker as audio output    
+    #stream_callback = PushAudioOutputStreamSampleCallback()
+    # Creates audio output stream from the callback
+    #push_stream = speechsdk.audio.PushAudioOutputStream(stream_callback)
+    # Creates a speech synthesizer using push stream as audio output.
+    stream_config = speechsdk.audio.AudioOutputConfig(device_name=settings.speaker_device_name)#stream=push_stream)
+    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=stream_config)
     
     speech_synthesizer.synthesis_started.connect(lambda evt: print("Synthesis started: {}".format(evt)))
-    curr_pos = 0
-    def synthesizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
-        print("At word boundary")
-        #print(len(evt.result.audio_data), evt.result.audio_data[len(evt.result.audio_data)-30:len(evt.result.audio_data)-1])
-        #print(int(evt.result.audio_data[len(evt.result.audio_data)]/255*90))
-        nonlocal curr_pos
-        pwm_pos(0, 1, curr_pos*70 + 10)
-        if (not curr_pos):
-            curr_pos = 1
-        else:
-            curr_pos = 0
-        #print(evt.result.audio_data[len(evt.result.audio_data)-1])
-    speech_synthesizer.synthesis_word_boundary.connect(synthesizing_cb)
-   #speech_synthesizer.synthesizing.connect(synthesizing_cb)
-    speech_synthesizer.synthesis_completed.connect(lambda evt: print("Synthesis completed: {}".format(evt)))
-
+    speech_synthesizer.synthesizing.connect(chunk_rec_audio_event)
+    speech_synthesizer.viseme_received.connect(phenome_rec_audio_event)
+    speech_synthesizer.synthesis_completed.connect(complete_audio_event)
 
     result = speech_synthesizer.speak_text_async(openai_text).get()
+   #while (not result._ResultFuture__resolved):
+   #    print("Still waiting...")
+   #    time.sleep(0.1)
+
 activate_pwm('pwm-ao-b-6', 1)
+pwm_obj = pwm_runner(0, 1)
+servo_thread = threading.Thread(target=visemes2servo, args=(pwm_obj,))
+servo_thread.start()
 curr_convo = []
 gen_system_content(curr_convo, "insult_text.txt")
 gen_assistant_content(curr_convo, "Hello stupid, why are you taking up my oxygen?")
-text2speech("Hello stupid, why are you taking up my oxygen?")
+text2speech(pwm_obj, "Hello stupid, why are you taking up my oxygen?")
 print("Hello stupid, why are you taking up my oxygen?")
 
 openai.api_key = settings.openai_key 
@@ -187,5 +267,8 @@ for i in range(0, 5):
     )
     gen_assistant_content(curr_convo, response.choices[0].message.content)
     print(response.choices[0].message.content)
-    text2speech(response.choices[0].message.content)
+    text2speech(pwm_obj, response.choices[0].message.content)
+kill_viseme = True
+servo_thread.join()
+pwm_obj.close()
 #rint(current_convo)
