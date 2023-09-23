@@ -48,9 +48,10 @@ def deactivate_pwm(pwm_name):
     else:
         print(f"PWM name: {pwm_name} already not active")
 class pwm_runner:
-    def __init__(self, chip_num, pwm_num, period_ns=2400000, duty_cycle_ns=400000, step_ns=100000):
+    def __init__(self, chip_num, pwm_num, secs_per_deg = (0.1/60), period_ns=2400000, duty_cycle_ns=400000, step_ns=100000):
         self.chip_num = chip_num
         self.pwm_num = pwm_num
+        self.secs_per_deg = secs_per_deg
         self.period_ns = period_ns
         self.duty_cycle_ns = duty_cycle_ns
         self.step_ns = step_ns
@@ -83,8 +84,6 @@ def push_button_record():
         if len(finalized_text) < curr_text_index + 1:
             finalized_text.append('')
         finalized_text[curr_text_index] = str(evt.result.text)
-        #rint('RECOGNIZING: {}'.format(evt))
-       #print(finalized_text[curr_text_index])
 
     def recognized_cb(evt: speechsdk.SpeechRecognitionEventArgs):
         nonlocal finalized_text
@@ -94,12 +93,9 @@ def push_button_record():
         finalized_text[curr_text_index] = str(evt.result.text)
         print(finalized_text[curr_text_index])
         curr_text_index += 1
-       #print(curr_text_index)
-        #rint(f"TEXT IS RIGHT {finalized_text}")
 
     def stop_cb(evt: speechsdk.SessionEventArgs):
         """callback that signals to stop continuous recognition"""
-        #rint('CLOSING on {}'.format(evt))
         nonlocal done
         done = True
 
@@ -153,14 +149,14 @@ def gen_user_response(curr_convo, user_response):
     curr_convo.append({ "role" : "user", "content" : user_response })
 
 def visemes2servo(*pwm_run):
-    low = 10
-    high = 70
+    #pass in low as 0 high as 1 and pwm_runner as 2
+    low = pwm_run[0]
+    high = pwm_run[1]
     secs_per_deg = (0.1/60)
     last_setting = False
     global kill_viseme
     global viseme_event_now
     global viseme_num
-    print("THESE ARE START VALUES:", kill_viseme, viseme_event_now)
     open_mouths = [1, 2, 9, 11, 20]
     closed_mouths = [0, 18, 21 ]
     oooo_mouths = [3, 7, 10, 13]
@@ -170,28 +166,24 @@ def visemes2servo(*pwm_run):
     curr_angle = 0
     while not kill_viseme:
         if viseme_event_now: 
-            print("We're in a viseme event...")
             if viseme_num in open_mouths:
-                pwm_run[0].set_pos(high)
+                pwm_run[2].set_pos(high)
                 curr_angle = high
             elif viseme_num in oooo_mouths or viseme_num in mid_mouths:
-                pwm_run[0].set_pos(low + (high-low)//2)
+                pwm_run[2].set_pos(low + (high-low)//2)
                 curr_angle = low + (high-low)//2
             elif viseme_num in mid_low_mouths: 
-                pwm_run[0].set_pos(low + (high-low)//4)
+                pwm_run[2].set_pos(low + (high-low)//4)
                 curr_angle = low + (high-low)//4
             else: 
-                pwm_run[0].set_pos(low)
+                pwm_run[2].set_pos(low)
                 curr_angle = low 
             time.sleep(int(abs(curr_angle-last_angle)*secs_per_deg))
             last_angle = curr_angle
             viseme_event_now = False
     return last_setting
 
-
-
 def text2speech(pwm_obj, openai_text):
-    #out_stream = speechsdk.audio.PullAudioOutputStream()
     last_time = time.time()
     last_setting = False
     def phenome_rec_audio_event(evt: speechsdk.SpeechSynthesisVisemeEventArgs):
@@ -202,17 +194,6 @@ def text2speech(pwm_obj, openai_text):
         print(evt)
         viseme_event_now = True
         viseme_num = evt.viseme_id
-       #print("visemes2servo starting...")
-        #visemes2servo(evt.viseme_id, last_setting)
-       #if ((time.time() - last_time) > 0):
-       #    if last_setting:
-       #        pwm_obj.set_pos(10)
-       #       #time.sleep(0.2)
-       #    else:
-       #        pwm_obj.set_pos(70)
-       #       #time.sleep(0.2)
-       #last_setting = not last_setting
-       #print(last_setting)
     def chunk_rec_audio_event(evt: speechsdk.SpeechRecognitionEventArgs):
         print("Chunk rec")
         print(evt)
@@ -225,12 +206,6 @@ def text2speech(pwm_obj, openai_text):
 
     # Set the voice name, refer to https://aka.ms/speech/voices/neural for full list.
     speech_config.speech_synthesis_voice_name = "en-US-AriaNeural"
-    # https://learn.microsoft.com/en-us/javascript/api/microsoft-cognitiveservices-speech-sdk/?view=azure-node-latest
-    # Creates a speech synthesizer using the default speaker as audio output    
-    #stream_callback = PushAudioOutputStreamSampleCallback()
-    # Creates audio output stream from the callback
-    #push_stream = speechsdk.audio.PushAudioOutputStream(stream_callback)
-    # Creates a speech synthesizer using push stream as audio output.
     stream_config = speechsdk.audio.AudioOutputConfig(device_name=settings.speaker_device_name)#stream=push_stream)
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=stream_config)
     
@@ -240,35 +215,32 @@ def text2speech(pwm_obj, openai_text):
     speech_synthesizer.synthesis_completed.connect(complete_audio_event)
 
     result = speech_synthesizer.speak_text_async(openai_text).get()
-   #while (not result._ResultFuture__resolved):
-   #    print("Still waiting...")
-   #    time.sleep(0.1)
 
-activate_pwm('pwm-ao-b-6', 1)
-pwm_obj = pwm_runner(0, 1)
-servo_thread = threading.Thread(target=visemes2servo, args=(pwm_obj,))
-servo_thread.start()
-curr_convo = []
-gen_system_content(curr_convo, "insult_text.txt")
-gen_assistant_content(curr_convo, "Hello stupid, why are you taking up my oxygen?")
-text2speech(pwm_obj, "Hello stupid, why are you taking up my oxygen?")
-print("Hello stupid, why are you taking up my oxygen?")
+if __name__ == "__main__":
+    activate_pwm('pwm-ao-b-6', 1)
+    pwm_obj = pwm_runner(0, 1)
+    servo_thread = threading.Thread(target=visemes2servo, args=(10, 70, pwm_obj,))
+    servo_thread.start()
+    curr_convo = []
+    gen_system_content(curr_convo, "insult_text.txt")
+    gen_assistant_content(curr_convo, "Hello stupid, why are you taking up my oxygen?")
+    text2speech(pwm_obj, "Hello stupid, why are you taking up my oxygen?")
+    print("Hello stupid, why are you taking up my oxygen?")
 
-openai.api_key = settings.openai_key 
-for i in range(0, 5):
-    store_human_speech = push_button_record()
-    print(store_human_speech)
-    gen_user_response(curr_convo, store_human_speech) 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=curr_convo,
-        temperature=1.25,
-        max_tokens=1024,
-    )
-    gen_assistant_content(curr_convo, response.choices[0].message.content)
-    print(response.choices[0].message.content)
-    text2speech(pwm_obj, response.choices[0].message.content)
-kill_viseme = True
-servo_thread.join()
-pwm_obj.close()
-#rint(current_convo)
+    openai.api_key = settings.openai_key 
+    for i in range(0, 5):
+        store_human_speech = push_button_record()
+        print(store_human_speech)
+        gen_user_response(curr_convo, store_human_speech) 
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=curr_convo,
+            temperature=1.25,
+            max_tokens=1024,
+        )
+        gen_assistant_content(curr_convo, response.choices[0].message.content)
+        print(response.choices[0].message.content)
+        text2speech(pwm_obj, response.choices[0].message.content)
+    kill_viseme = True
+    servo_thread.join()
+    pwm_obj.close()
