@@ -275,7 +275,7 @@ if __name__ == "__main__":
                     "temperature" : 1.25,
                     "max_tokens" : 3800, 
                     "curr_token_count" : 0,
-                    "summarize_token_time" : 600, 
+                    "summarize_token_time" : 2000, 
                     "curr_convo" : [], 
                     "raw_text" : ""}
     activate_pwm('pwm-ao-b-6', 1)
