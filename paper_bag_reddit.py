@@ -35,7 +35,9 @@ def activate_pwm(pwm_name, pwm_chip_num):
     if not already_active:
         print(f"PWM name: {pwm_name} setting...")
         subprocess.getoutput(f'sudo ldto enable {pwm_name}')
-        subprocess.getoutput(f'echo 1 > /sys/class/pwm/pwmchip{pwm_chip_num}/export')
+        subprocess.getoutput(f'sudo echo 1 > /sys/class/pwm/pwmchip{pwm_chip_num}/export')
+        #set export to be writable by all so that PWM will succeed on the first time. Not fully sure why permission denied the first time, then succeeds second time. FIXME
+        subprocess.getoutput(f'sudo chmod 222 /sys/class/pwm/pwmchip{pwm_chip_num}/export')
 
 def deactivate_pwm(pwm_name):
     already_active = False
@@ -270,6 +272,7 @@ def text2speech(pwm_obj, openai_text):
 
 
 if __name__ == "__main__":
+    openai.api_key = settings.openai_key 
     convo_dict = {
                     "model" : "gpt-3.5-turbo",
                     "temperature" : 1.25,
@@ -285,17 +288,21 @@ if __name__ == "__main__":
     gen_system_content(convo_dict, "paper_bag_god.txt")
     gen_assistant_content(convo_dict, "Hello, why are you wasting my time?")
     text2speech(pwm_obj, "Hello, why are you wasting my time?")
-    print("Done first tts gen")
-    print("Hello, why are you wasting my time?")
-
+    reddit_file = open('reddit_story.txt', 'r+')
+    gen_user_response(convo_dict, "I need your moral judgement on this Reddit story: " + reddit_file.read())
+    reddit_file.close()
+    curr_msg = gpt35_convo_gen(convo_dict)
     print("I've got this juicy goss...")
     with gpiod.Chip('gpiochip'+str(chip_num)) as chip:
       lines = chip.get_line(button_pin)
       lines.request(consumer=sys.argv[0], type=gpiod.LINE_REQ_DIR_IN, flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP | gpiod.LINE_REQ_FLAG_ACTIVE_LOW)
       while lines.get_value() == 0:
           pass
+    text2speech(pwm_obj, curr_msg)
+    print("Done first tts gen")
+    print("Hello, why are you wasting my time?")
+
     
-    openai.api_key = settings.openai_key 
     summ_thread = None
     new_convo_dict = None
     count_since_thread_ran = 1
