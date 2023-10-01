@@ -7,16 +7,14 @@ import gpiod
 import sys
 import azure.cognitiveservices.speech as speechsdk
 import settings
-
-button_pin = 91
-chip_num = 1
-
 from periphery import PWM
 import subprocess
 import numpy
 import threading
 import tiktoken
 
+button_pin = 91
+chip_num = 1
 
 #CHANGE THESE ONCE WORKING
 viseme_event_now = False
@@ -51,14 +49,14 @@ def deactivate_pwm(pwm_name):
     else:
         print(f"PWM name: {pwm_name} already not active")
 class pwm_runner:
-    def __init__(self, chip_num, pwm_num, secs_per_deg = (0.1/60), period_ns=2400000, duty_cycle_ns=400000, step_ns=100000):
+    def __init__(self, chip_num, channel_num, secs_per_deg = (0.1/60), period_ns=2400000, duty_cycle_ns=400000, step_ns=100000):
         self.chip_num = chip_num
-        self.pwm_num = pwm_num
+        self.channel_num = channel_num
         self.secs_per_deg = secs_per_deg
         self.period_ns = period_ns
         self.duty_cycle_ns = duty_cycle_ns
         self.step_ns = step_ns
-        self.__pwm_obj = PWM(0, 1)
+        self.__pwm_obj = PWM(chip_num, channel_num)
         self.__pwm_obj.period_ns = period_ns
         self.__pwm_obj.duty_cycle_ns = period_ns
         self.__pwm_obj.enable()
@@ -73,7 +71,7 @@ class pwm_runner:
     def close(self):
         self.__pwm_obj.close()
 
-def push_button_record():
+def push_button_record(button_pin_num, button_chip_num):
     curr_text_index = 0
     finalized_text = ['']
     audio_config = speechsdk.AudioConfig(device_name=settings.mic_device_name)
@@ -108,8 +106,8 @@ def push_button_record():
     speech_recognizer.session_stopped.connect(stop_cb)
     speech_recognizer.canceled.connect(stop_cb)
 
-    with gpiod.Chip('gpiochip'+str(chip_num)) as chip:
-      lines = chip.get_line(button_pin)
+    with gpiod.Chip('gpiochip'+str(button_chip_num)) as chip:
+      lines = chip.get_line(button_pin_num)
       lines.request(consumer=sys.argv[0], type=gpiod.LINE_REQ_DIR_IN, flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP | gpiod.LINE_REQ_FLAG_ACTIVE_LOW)
       last_time = time.time()*1000
       operation = 'noop'
@@ -203,12 +201,10 @@ def gpt35_summ_gen(*thread_args):
         sys_msg = "You are an expert at summarizing conversations. Your summarizations still sound like someone is recounting a memory. Your conversation summarization will be used to continue conversations"
         user_msg = "Please summarize our past conversation. Disregard system messages and your previous conversation. Just summarize what you said within 40-70 words so that we can continue our conversation. Here is the conversation:" + thread_args[0]["raw_text"]
         old_convo = thread_args[0]["curr_convo"][0].copy()
-        #thread_args_list = list(thread_args)
         curr_token_size = curr_enc.encode(sys_msg + " " + user_msg)
         thread_args[0]["curr_convo"] = [{ "role" : "system", "content" : sys_msg}]
         thread_args[0]["raw_text"] = ""
         gen_user_response(thread_args[0], user_msg)
-        print(thread_args[0])
         response = openai.ChatCompletion.create(
             model=thread_args[0]["model"],
             messages=thread_args[0]["curr_convo"],
@@ -224,8 +220,6 @@ def gpt35_summ_gen(*thread_args):
 
 def gpt35_convo_gen(convo_dict):
         curr_enc = tiktoken.encoding_for_model(convo_dict["model"])
-        print("Curr convo tokens:", len(curr_enc.encode(convo_dict["curr_convo"][0]["content"] + convo_dict["raw_text"])))
-        print(convo_dict["curr_convo"])
         response = openai.ChatCompletion.create(
             model=convo_dict["model"],
             messages=convo_dict["curr_convo"],
@@ -237,20 +231,14 @@ def gpt35_convo_gen(convo_dict):
         gen_assistant_content(convo_dict, response.choices[0].message.content)
         return response.choices[0].message.content
 
-def text2speech(pwm_obj, openai_text):
+def text2speech(pwm_obj, openai_text, voice_name="en-US-GuyNeural"):
     last_time = time.time()
     last_setting = False
     def phenome_rec_audio_event(evt: speechsdk.SpeechSynthesisVisemeEventArgs):
         global viseme_event_now
         global viseme_num
-        #nonlocal last_time
-        print("Phenome rec")
-        print(evt)
         viseme_event_now = True
         viseme_num = evt.viseme_id
-    def chunk_rec_audio_event(evt: speechsdk.SpeechRecognitionEventArgs):
-        print("Chunk rec")
-        print(evt)
     audio_complete = False
     def complete_audio_event(evt: speechsdk.SpeechRecognitionEventArgs):
         nonlocal audio_complete
@@ -259,12 +247,10 @@ def text2speech(pwm_obj, openai_text):
     speech_config = speechsdk.SpeechConfig(subscription=settings.azure_sub, region=settings.azure_region)
 
     # Set the voice name, refer to https://aka.ms/speech/voices/neural for full list.
-    speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
-    stream_config = speechsdk.audio.AudioOutputConfig(device_name=settings.speaker_device_name)#stream=push_stream)
+    speech_config.speech_synthesis_voice_name = voice_name
+    stream_config = speechsdk.audio.AudioOutputConfig(device_name=settings.speaker_device_name)
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=stream_config)
     
-    speech_synthesizer.synthesis_started.connect(lambda evt: print("Synthesis started: {}".format(evt)))
-    speech_synthesizer.synthesizing.connect(chunk_rec_audio_event)
     speech_synthesizer.viseme_received.connect(phenome_rec_audio_event)
     speech_synthesizer.synthesis_completed.connect(complete_audio_event)
 
@@ -281,26 +267,27 @@ if __name__ == "__main__":
                     "summarize_token_time" : 2000, 
                     "curr_convo" : [], 
                     "raw_text" : ""}
-    activate_pwm('pwm-ao-b-6', 1)
-    pwm_obj = pwm_runner(0, 1)
-    servo_thread = threading.Thread(target=visemes2servo, args=(10, 70, pwm_obj,))
+    activate_pwm(settings.pwm_pin_name, settings.pwm_chip_num)
+    pwm_obj = pwm_runner(settings.pwm_chip_num, settings.pwm_channel_num)
+    servo_thread = threading.Thread(target=visemes2servo, args=(settings.servo_angles[0], settings.servo_angles[1], pwm_obj,))
     servo_thread.start()
-    gen_system_content(convo_dict, "paper_bag_god.txt")
-    gen_assistant_content(convo_dict, "Hello, why are you wasting my time?")
-    text2speech(pwm_obj, "Hello, why are you wasting my time?")
-    reddit_file = open('reddit_story.txt', 'r+')
-    gen_user_response(convo_dict, "I need your moral judgement on this Reddit story: " + reddit_file.read())
-    reddit_file.close()
-    curr_msg = gpt35_convo_gen(convo_dict)
-    print("I've got this juicy goss...")
-    with gpiod.Chip('gpiochip'+str(chip_num)) as chip:
-      lines = chip.get_line(button_pin)
-      lines.request(consumer=sys.argv[0], type=gpiod.LINE_REQ_DIR_IN, flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP | gpiod.LINE_REQ_FLAG_ACTIVE_LOW)
-      while lines.get_value() == 0:
-          pass
-    text2speech(pwm_obj, curr_msg)
-    print("Done first tts gen")
-    print("Hello, why are you wasting my time?")
+    gen_system_content(convo_dict, settings.system_conf_prompt)
+    gen_assistant_content(convo_dict, settings.system_start_talk)
+    text2speech(pwm_obj, settings.system_start_talk, voice_name=settings.speech_voice_name)
+    if settings.mode == "reddit":
+        reddit_file = open(settings.reddit_story, 'r+')
+        gen_user_response(convo_dict, "I need your moral judgement on this Reddit story: " + reddit_file.read())
+        reddit_file.close()
+        curr_msg = gpt35_convo_gen(convo_dict)
+        print("I've got this juicy goss...")
+        with gpiod.Chip('gpiochip'+str(settings.button_chip_num)) as chip:
+            lines = chip.get_line(settings.button_pin_num)
+            lines.request(consumer=sys.argv[0], type=gpiod.LINE_REQ_DIR_IN, flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP | gpiod.LINE_REQ_FLAG_ACTIVE_LOW)
+            while lines.get_value() == 0:
+                pass
+            text2speech(pwm_obj, curr_msg, voice_name=settings.speech_voice_name)
+        print("Done first tts gen")
+    print(settings.system_start_talk)
 
     
     summ_thread = None
@@ -315,11 +302,11 @@ if __name__ == "__main__":
             new_convo_dict = convo_dict.copy()
             summ_thread = threading.Thread(target=gpt35_summ_gen, args=(new_convo_dict,))
             summ_thread.start()
-        store_human_speech = push_button_record()
+        store_human_speech = push_button_record(settings.button_pin_num, settings.button_chip_num)
         print(store_human_speech)
         gen_user_response(convo_dict, store_human_speech) 
         curr_msg = gpt35_convo_gen(convo_dict)
-        text2speech(pwm_obj, curr_msg)
+        text2speech(pwm_obj, curr_msg, voice_name=settings.speech_voice_name)
         if summ_thread and not summ_thread.is_alive():
            summ_thread = None
            convo_appends = []
@@ -336,3 +323,4 @@ if __name__ == "__main__":
     kill_viseme = True
     servo_thread.join()
     pwm_obj.close()
+    deactivate_pwm()
