@@ -10,7 +10,7 @@ azure_region        = "eastus" #the location of your speech
 openai_key          = "" #openai key 
 mode                = "convo" #either "reddit" or "convo". reddit will start with waiting for a button press and convo will just go into talking, no reddit story pass in
 reddit_story        = "reddit_story.txt" #pass in the file name of the reddit story (takes text files). Only needed if "mode" is "reddit"
-system_conf_prompt  = "paper_bag_god.txt" #the prompt to use for the system message
+system_conf_prompt  = "system_message_templates/insulting-paper-bag.txt" #the prompt to use for the system message
 system_start_talk   = "Hello, why are you wasting my time?"
 
 servo_angles        = [10, 70] #the low and high angles for the servo as it talks
