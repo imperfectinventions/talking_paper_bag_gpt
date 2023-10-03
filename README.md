@@ -36,6 +36,8 @@ You can also give the paper bag a personality via specifying the system message.
 | PLA Filament           | For making the full 3D-printed assembly. | [Link](https://www.amazon.com/gp/product/B08QN5FQX7/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
 | Some solid core wire   | For the button | [Link](https://www.amazon.com/gp/product/B081GMJVPB/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
 | A Push Button          | For controlling when to talk to the Paper Bag | [Link](https://www.amazon.com/gp/product/B09R47N37H/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
+| Paper Bags | For the whole aesthetic |  | 
+| Paper Bag Decorations | For decorations |  |
 
 ### Tools Needed
 
@@ -44,8 +46,7 @@ You can also give the paper bag a personality via specifying the system message.
 | Wire Stripper          | Stripping Wires   | [Link](https://www.amazon.com/gp/product/B09539R6TD/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
 | 3D Printer             | For printing the full 3D printer assembly | [I use a modded Geeetech A10, but link to some random printer](https://www.amazon.com/Comgrow-Creality-Ender-Aluminum-220x220x250mm/dp/B07BR3F9N6/ref=sr_1_11?keywords=geeetech+a10&ufe=app_do%3Aamzn1.fos.18ed3cb5-28d5-4975-8bc7-93deae8f9840) | 
 | Soldering Iron         | For soldering | [Link to Default Soldering Iron, not sponsored](https://www.amazon.com/Soldering-Digital-Welding-Portable-Electric/dp/B08R3515SF/ref=sr_1_5?keywords=soldering+iron) |
-
-
+| Hot Glue Gun           | For some touch up jobs, securing wires in place, etc. | |
 
 ## Assembly
 
@@ -56,3 +57,8 @@ You can also give the paper bag a personality via specifying the system message.
 ### Electrical Wiring
 
 ## Software Setup
+
+### Settings File
+
+### Included System Messages
+
