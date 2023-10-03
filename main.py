@@ -13,9 +13,6 @@ import numpy
 import threading
 import tiktoken
 
-button_pin = 91
-chip_num = 1
-
 #CHANGE THESE ONCE WORKING
 viseme_event_now = False
 viseme_num = 0
@@ -177,7 +174,6 @@ def visemes2servo(*pwm_run):
     curr_angle = 0
     while not kill_viseme:
         if viseme_event_now: 
-            print("servo run now...")
             if viseme_num in open_mouths:
                 pwm_run[2].set_pos(high)
                 curr_angle = high
