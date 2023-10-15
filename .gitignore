@@ -1,7 +1,13 @@
+#python
 settings.py
 __pycache__
 *.no
-
+#terraform
 .terraform
 terraform/
 *.tfstate
+*.tfstate*
+settings.yaml
+#freecad
+*.FCStd1
+
