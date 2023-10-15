@@ -8,7 +8,8 @@ terraform/
 *.tfstate
 *.tfstate*
 settings.yaml
-*settings*
+*settings.*
+terraform_code/settings.yaml
 #freecad
 *.FCStd1
 
