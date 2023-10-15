@@ -7,9 +7,7 @@ __pycache__
 terraform/
 *.tfstate
 *.tfstate*
-settings.yaml
-*settings.*
-terraform_code/settings.yaml
+*settings.yaml
 #freecad
 *.FCStd1
 
