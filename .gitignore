@@ -1,0 +1,14 @@
+#for devices that should not be committed (such as the settings files)
+#i did this. git update-index --assume-unchanged <file>
+#before you do this, please read this: https://stackoverflow.com/questions/28497104/how-to-ignore-any-changes-on-already-committed-file-to-git
+#python
+__pycache__
+*.no
+#terraform
+.terraform
+terraform/
+*.tfstate
+*.tfstate*
+#freecad
+*.FCStd1
+
