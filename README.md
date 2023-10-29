@@ -25,6 +25,7 @@ You can also give the paper bag a personality via specifying the system message.
 |  Name                  | Purpose           | Amazon Link    |
 |------------------------|-------------------|----------------|
 | 1 Libre AML-S905X-CC   | The Brains of the system. Can run linux. Future updates may involve using MicroPython and remove the need for an OS, but this is the current design. Also has 4 USB ports, so it was easy to run USB peripherals on them. | [link](https://www.amazon.com/gp/product/B074P6BNGZ/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&th=1) |
+| 1 SD Card              | This will be the non-volatile storage | [link](https://www.amazon.com/SanDisk-Extreme-microSDXC-Memory-Adapter/dp/B09X7BK27V/ref=sr_1_6?keywords=sd+card) |
 | 1 Wifi Dongle          | WiFi connectivity. This board does have an Ethernet plug so you can use that and free up a USB port. I just went with this. | [link](https://www.amazon.com/gp/product/B0BNFKJPXS/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
 | Some Stranded Wire     | To connect everything together | [Link to the Wire I Used](https://www.amazon.com/gp/product/B077HQ779B/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
 | Crimp Connectors       | To make the wire connections. You could bring your own pre-made wires for this, but I just decided at one point it was cheaper to make my own. | [Link with Crimper](https://www.amazon.com/gp/product/B07VQ6YNSC/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) |
@@ -52,9 +53,29 @@ You can also give the paper bag a personality via specifying the system message.
 
 ### Print Settings
 
+I printed most parts with 15% infill and surrounded the screw holes and some weak points with 90% infill using a support block in Cura.
+
 ### Part Assembly
 
-### Electrical Wiring
+![Step 1](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0000.png)
+![Step 2](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0001.png)
+![Step 3](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0002.png)
+![Step 4](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0003.png)
+![Step 5](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0004.png)
+![Step 6](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0005.png)
+![Step 7](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0006.png)
+![Step 8](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0007.png)
+![Step 9](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0008.png)
+![Step 10](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0009.png)
+![Step 11a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0010.png)
+![Step 11b](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0011.png)
+![Step 12](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0012.png)
+![Step 13](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0013.png)
+![Step 14a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0014.png)
+![Step 14b](FreeCAD_Files/steps_renders/svg_steps_14b.png)
+![Step 15a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0015.png)
+![Step 15b](FreeCAD_Files/steps_renders/svg_steps_15b.png)
+![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
 ## Software Setup
 
