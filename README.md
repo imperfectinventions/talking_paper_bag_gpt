@@ -6,11 +6,7 @@
    - [Tools Needed](#tools-needed)
 - [Assembly](#assembly)
    - [Print Settings](#print-settings)
-   - [Part Assembly](#part-assembly)
-   - [Electrical Wiring](#electrical-wiring)
-- [Software Setup](#software-setup)
-   - [Settings File](#settings-file)
-   - [Included System Messages](#included-system-messages)
+   - [Assembly and Setup Steps](#assembly-and-setup-steps)
 
 ## Introduction
 
@@ -55,7 +51,7 @@ You can also give the paper bag a personality via specifying the system message.
 
 I printed most parts with 15% infill and surrounded the screw holes and some weak points with 90% infill using a support block in Cura.
 
-### Part Assembly
+### Assembly and Setup Steps
 
 ![Step 1](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0000.png)
 ![Step 2](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0001.png)
@@ -75,11 +71,29 @@ I printed most parts with 15% infill and surrounded the screw holes and some wea
 ![Step 14b](FreeCAD_Files/steps_renders/svg_steps_14b.png)
 ![Step 15a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0015.png)
 ![Step 15b](FreeCAD_Files/steps_renders/svg_steps_15b.png)
+#### Step 15c: Install the OS
+
+You will now need to set up your micro SD card to hold the OS (or if you go with an eMMC, go with that). The steps for installing Raspbian onto the micro SD is [here](https://hub.libre.computer/t/raspbian-11-bullseye-for-libre-computer-boards/82).
+
+After you install the OS, insert the micro SD into the micro SD slot (shown in step 15a). 
+
+#### Step 15d: Set up your SSH host 
+
+Now that you have a user account set up, make sure to set up your SSH host (just so that you don't need to have a keyboard, mouse, and monitor plugged into the Libre Computer so you can plug in your other devices. NOTE this is only needed if using USB for everything. If you use AV, then you don't necessarily have to do this step).
+
+```bash
+sudo apt install openssh-server openssh-client
+```
+[Reference](https://www.tecmint.com/install-openssh-server-in-linux/)
+
 ![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
-## Software Setup
+#### Step 17: Define the settings file
 
-### Settings File
+In the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
 
-### Included System Messages
+#### Step 18: Run it!
 
+```bash
+python main.py
+```
