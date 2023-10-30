@@ -88,9 +88,14 @@ sudo apt install openssh-server openssh-client
 
 ![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
-#### Step 17: Create the cloud resources
+#### Step 17: Clone this repo
+
+Clone this repo onto the Libre computer. If you have done this already, kudos. If you have not, do it now.
+
+#### Step 18: Create the cloud resources
 
 [Create a Microsoft Azure Account](https://azure.microsoft.com/en-us/free/)
+
 [Create an Azure subscription or Use an Existing One](https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/create-subscription)
 [How to Install and Configure Terraorm for Microsoft Azure](https://learn.microsoft.com/en-us/azure/developer/terraform/quickstart-configure)
 
@@ -116,16 +121,25 @@ terraform apply
 ```
 
 Verify the resources exist:
+Look under "resource groups" on portal.azure.com and find the correct resource group known as rg-sbt-ai. Then click on it and make sure the speech resource and the key vault are there
+![Look under "resource groups" on portal.azure.com and find the correct resource group known as rg-sbt-ai. Then click on it and make sure the speech resource and the key vault are there](FreeCAD_Files/steps_renders/azure_rg_shot.png)
 
-#### Step 18: Get the Azure speech API key
+#### Step 19: Get the Azure speech API key
 
-#### Step 19: Get the OpenAI API key
+Go to the Azure speech resource named cog-acc-speech-sbt-ai and go down to where it says "KEYS". Use any one of those keys
+![Go to the Azure speech resource named cog-acc-speech-sbt-ai and go down to where it says "KEYS". Use any one of those keys](FreeCAD_Files/steps_renders/azure_speech_sdk_keys.png)
 
-#### Step 20: Define the settings file
+#### Step 20: Get the OpenAI API key
 
-In the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
+Now got and set up an account with OpenAI. Once done, go to "View API Keys" and "Create a new secret key". This is the key that you will use in step 20 when inserting it into the settings.py file.
 
-#### Step 21: Run it!
+![Now got and set up an account with OpenAI. Once done, go to "View API Keys" and "Create a new secret key". This is the key that you will use in step 20 when inserting it into the settings.py file](FreeCAD_Files/steps_renders/openai_key.png)
+
+#### Step 21: Define the settings file
+
+On the Libre Computer clone of this repo in the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
+
+#### Step 22: Run it on the Libre Computer!
 
 ```bash
 python main.py
