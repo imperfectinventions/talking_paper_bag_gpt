@@ -88,11 +88,58 @@ sudo apt install openssh-server openssh-client
 
 ![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
-#### Step 17: Define the settings file
+#### Step 17: Clone this repo
 
-In the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
+Clone this repo onto the Libre computer. If you have done this already, kudos. If you have not, do it now.
 
-#### Step 18: Run it!
+#### Step 18: Create the cloud resources
+
+[Create a Microsoft Azure Account](https://azure.microsoft.com/en-us/free/)
+
+[Create an Azure subscription or Use an Existing One](https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/create-subscription)
+[How to Install and Configure Terraorm for Microsoft Azure](https://learn.microsoft.com/en-us/azure/developer/terraform/quickstart-configure)
+
+Once there is an Azure subscription, terraform is set up, and "az login" or the equivalent command has been run, then it's time to set up the resource groups and the speech/other resources needed.
+```bash
+#for creating the service account used (make sure to get the account information from this)
+cd terraform_code/accounts
+terraform init
+terraform apply
+#for the resource group
+cd terraform_code/resource_group
+terraform init
+terraform apply
+```
+Then update the settings.yaml file (in the terraform_code directory) with your desired allowed IP addresses that should access your key vault (needs to be the public IP(s) that the Libre Computer is going to connect to). Specify the CIDR and the IP address.
+
+```bash
+#for the actual azure resources
+cd terraform_code/speech2text
+#this terraform will use the settings.yaml file.
+terraform init
+terraform apply
+```
+
+Verify the resources exist:
+Look under "resource groups" on portal.azure.com and find the correct resource group known as rg-sbt-ai. Then click on it and make sure the speech resource and the key vault are there
+![Look under "resource groups" on portal.azure.com and find the correct resource group known as rg-sbt-ai. Then click on it and make sure the speech resource and the key vault are there](FreeCAD_Files/steps_renders/azure_rg_shot.png)
+
+#### Step 19: Get the Azure speech API key
+
+Go to the Azure speech resource named cog-acc-speech-sbt-ai and go down to where it says "KEYS". Use any one of those keys
+![Go to the Azure speech resource named cog-acc-speech-sbt-ai and go down to where it says "KEYS". Use any one of those keys](FreeCAD_Files/steps_renders/azure_speech_sdk_keys.png)
+
+#### Step 20: Get the OpenAI API key
+
+Now got and set up an account with OpenAI. Once done, go to "View API Keys" and "Create a new secret key". This is the key that you will use in step 20 when inserting it into the settings.py file.
+
+![Now got and set up an account with OpenAI. Once done, go to "View API Keys" and "Create a new secret key". This is the key that you will use in step 20 when inserting it into the settings.py file](FreeCAD_Files/steps_renders/openai_key.png)
+
+#### Step 21: Define the settings file
+
+On the Libre Computer clone of this repo in the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
+
+#### Step 22: Run it on the Libre Computer!
 
 ```bash
 python main.py
