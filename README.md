@@ -88,11 +88,44 @@ sudo apt install openssh-server openssh-client
 
 ![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
-#### Step 17: Define the settings file
+#### Step 17: Create the cloud resources
+
+[Create a Microsoft Azure Account](https://azure.microsoft.com/en-us/free/)
+[Create an Azure subscription or Use an Existing One](https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/create-subscription)
+[How to Install and Configure Terraorm for Microsoft Azure](https://learn.microsoft.com/en-us/azure/developer/terraform/quickstart-configure)
+
+Once there is an Azure subscription, terraform is set up, and "az login" or the equivalent command has been run, then it's time to set up the resource groups and the speech/other resources needed.
+```bash
+#for creating the service account used (make sure to get the account information from this)
+cd terraform_code/accounts
+terraform init
+terraform apply
+#for the resource group
+cd terraform_code/resource_group
+terraform init
+terraform apply
+```
+Then update the settings.yaml file (in the terraform_code directory) with your desired allowed IP addresses that should access your key vault (needs to be the public IP(s) that the Libre Computer is going to connect to). Specify the CIDR and the IP address.
+
+```bash
+#for the actual azure resources
+cd terraform_code/speech2text
+#this terraform will use the settings.yaml file.
+terraform init
+terraform apply
+```
+
+Verify the resources exist:
+
+#### Step 18: Get the Azure speech API key
+
+#### Step 19: Get the OpenAI API key
+
+#### Step 20: Define the settings file
 
 In the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
 
-#### Step 18: Run it!
+#### Step 21: Run it!
 
 ```bash
 python main.py
