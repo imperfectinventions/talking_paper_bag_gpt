@@ -53,24 +53,78 @@ I printed most parts with 15% infill and surrounded the screw holes and some wea
 
 ### Assembly and Setup Steps
 
+#### Step 1
+
 ![Step 1](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0000.png)
+
+#### Step 2
+
 ![Step 2](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0001.png)
+
+#### Step 3
+
 ![Step 3](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0002.png)
+
+#### Step 4
+
 ![Step 4](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0003.png)
+
+#### Step 5
+
 ![Step 5](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0004.png)
+
+#### Step 6
+
 ![Step 6](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0005.png)
+
+#### Step 7
+
 ![Step 7](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0006.png)
+
+#### Step 8
+
 ![Step 8](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0007.png)
+
+#### Step 9
+
 ![Step 9](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_0008.png)
+
+#### Step 10
+
 ![Step 10](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0009.png)
+
+#### Step 11a
+
 ![Step 11a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0010.png)
+
+#### Step 11b
+
 ![Step 11b](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0011.png)
+
+#### Step 12
+
 ![Step 12](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0012.png)
+
+#### Step 13
+
 ![Step 13](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0013.png)
+
+#### Step 14a
+
 ![Step 14a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0014.png)
+
+#### Step 14b
+
 ![Step 14b](FreeCAD_Files/steps_renders/svg_steps_14b.png)
+
+#### Step 15a
+
 ![Step 15a](FreeCAD_Files/steps_renders/full_paper_bag_gpt_blender_assembly_steps_10_onward_0015.png)
+
+#### Step 15b
+
 ![Step 15b](FreeCAD_Files/steps_renders/svg_steps_15b.png)
+
 #### Step 15c: Install the OS
 
 You will now need to set up your micro SD card to hold the OS (or if you go with an eMMC, go with that). The steps for installing Raspbian onto the micro SD is [here](https://hub.libre.computer/t/raspbian-11-bullseye-for-libre-computer-boards/82).
@@ -84,7 +138,26 @@ Now that you have a user account set up, make sure to set up your SSH host (just
 ```bash
 sudo apt install openssh-server openssh-client
 ```
+
 [Reference](https://www.tecmint.com/install-openssh-server-in-linux/)
+
+#### Step 15e: Make sure the Latest Version of Python is Installed
+
+[Follow These Instructions](https://raspberrytips.com/install-latest-python-raspberry-pi/)
+
+#### Step 15f: Install the Necessary Pip Packages
+
+With venv
+```bash
+python3 -m pip install virtualenv
+python3 -m pip venv pbg-venv
+source pbg-venv
+pip install -r requirements.txt
+```
+Witout venv
+```bash
+pip install -r requirements.txt
+```
 
 ![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
