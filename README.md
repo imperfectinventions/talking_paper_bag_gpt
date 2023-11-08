@@ -1,4 +1,9 @@
 # Talking Paper Bag GPT
+
+![Paper Bag Image](FreeCAD_Files/steps_renders/paper_bag_pic.jpg)
+
+[Demo Link](https://www.instagram.com/p/CzWKE8drE5b/)
+
 # Table of Contents
 - [Introduction](#introduction)
 - [Requirements](#requirements)
