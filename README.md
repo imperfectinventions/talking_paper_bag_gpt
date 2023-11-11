@@ -150,11 +150,15 @@ sudo apt install openssh-server openssh-client
 
 [Follow These Instructions](https://raspberrytips.com/install-latest-python-raspberry-pi/)
 
-#### Step 15f: Install the Necessary Pip Packages
+#### Step 15f: Install the Necessary Pip Packages (no dokerfile)
+
+If using the dockerfile, skip to [Step 16](#step-16) (recommended you use docker). Follow all the steps normally, then do [Step 22: Docker](#step-22-docker)
 
 With venv
 ```bash
-python3 -m pip install virtualenv
+sudo apt-get install python3-libgpiod #for the gpiod library
+
+python3 -m pip install virtualenv --system-site-packages
 python3 -m pip venv pbg-venv
 source pbg-venv
 pip install -r requirements.txt
@@ -163,6 +167,8 @@ Witout venv
 ```bash
 pip install -r requirements.txt
 ```
+
+#### Step 16
 
 ![Step 16](FreeCAD_Files/steps_renders/svg_steps_16.png)
 
@@ -217,8 +223,20 @@ Now got and set up an account with OpenAI. Once done, go to "View API Keys" and 
 
 On the Libre Computer clone of this repo in the file named "settings.py", fill out your values. Each value in the settings.py has an explanation where to pull each value from.
 
-#### Step 22: Run it on the Libre Computer!
+#### Step 22: Run it on the Libre Computer! (no docker)
 
 ```bash
 python main.py
 ```
+
+#### Step 22: Docker
+
+If running in docker, then:
+
+```bash
+#go into the cloned repo's code where the dockerfile is
+sudo docker image build -t paper-bag-gpt:0.0.1 .
+#run container (need privileged or to map all expected devices/volumes to the container for GPIO and USB)
+sudo docker container run --privileged -d paper-bag-gpt:0.0.1 
+```
+Once docker is up and running, then you should have a working container!
